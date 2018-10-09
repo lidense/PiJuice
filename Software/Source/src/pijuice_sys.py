@@ -33,10 +33,11 @@ dopoll = True
 PID_FILE = '/tmp/pijuice_sys.pid'
 HALT_FILE = '/tmp/pijuice_halt.flag'
 
+
 def _SystemHalt(event):
     if (event in ('low_charge', 'low_battery_voltage', 'no_power')
         and configData.get('system_task', {}).get('wakeup_on_charge', {}).get('enabled', False)
-        and 'trigger_level' in configData['system_task']['wakeup_on_charge']):
+            and 'trigger_level' in configData['system_task']['wakeup_on_charge']):
 
         try:
             tl = float(configData['system_task']['wakeup_on_charge']['trigger_level'])
@@ -48,6 +49,7 @@ def _SystemHalt(event):
     with open(HALT_FILE, 'w') as f:
         pass
     subprocess.call(["sudo", "halt"])
+
 
 def ExecuteFunc(func, event, param):
     if func == 'SYS_FUNC_HALT':
@@ -186,7 +188,9 @@ def _EvalFaultFlags():
         faults = faults['data']
         for f in (pijuice.status.faultEvents + pijuice.status.faults):
             if f in faults:
-                if sysEvEn and (f in configData['system_events']) and ('enabled' in configData['system_events'][f]) and configData['system_events'][f]['enabled']:
+                if sysEvEn \
+                        and (f in configData['system_events']) \
+                        and ('enabled' in configData['system_events'][f]) and configData['system_events'][f]['enabled']:
                     if configData['system_events'][f]['function'] != 'USER_EVENT':
                         pijuice.status.ResetFaultFlags([f])
                         ExecuteFunc(configData['system_events'][f]['function'],
@@ -266,9 +270,8 @@ def main():
 
         try:
             if (('watchdog' in configData['system_task'])
-                and ('enabled' in configData['system_task']['watchdog'])
-                and configData['system_task']['watchdog']['enabled']
-                ):
+                    and ('enabled' in configData['system_task']['watchdog'])
+                    and configData['system_task']['watchdog']['enabled']):
                 # Disabling watchdog
                 ret = pijuice.power.SetWatchdog(0)
                 if ret['error'] != 'NO_ERROR':
@@ -277,8 +280,10 @@ def main():
         except:
             pass
         sysJobTargets = str(subprocess.check_output(["sudo", "systemctl", "list-jobs"]))
-        reboot = True if re.search('reboot.target.*start', sysJobTargets) is not None else False                      # reboot.target exists
-        swStop = True if re.search('(?:halt|shutdown).target.*start', sysJobTargets) is not None else False           # shutdown | halt exists
+        # reboot = True if reboot.target exists
+        reboot = True if re.search('reboot.target.*start', sysJobTargets) is not None else False
+        # swStop = True if halt|shutdown exists
+        swStop = True if re.search('(?:halt|shutdown).target.*start', sysJobTargets) is not None else False
         causePowerOff = True if (swStop and not reboot) else False
         ret = pijuice.status.GetStatus()
         if ( ret['error'] == 'NO_ERROR' 
@@ -288,17 +293,16 @@ def main():
             ):
             # Set duration for when pijuice will cut power (Recommended 30+ sec, for halt to complete)
             try:
-                powerOffDelay = int(configData['system_task']['ext_halt_power_off'].get('period',30))
+                powerOffDelay = int(configData['system_task']['ext_halt_power_off'].get('period', 30))
                 pijuice.power.SetPowerOff(powerOffDelay)
             except ValueError:
                 pass
         sys.exit(0)
 
-    if (('watchdog' in configData['system_task'])
-            and ('enabled' in configData['system_task']['watchdog'])
-            and configData['system_task']['watchdog']['enabled']
-            and ('period' in configData['system_task']['watchdog'])
-        ):
+    if ('watchdog' in configData['system_task']) \
+            and ('enabled' in configData['system_task']['watchdog']) \
+            and configData['system_task']['watchdog']['enabled'] \
+            and ('period' in configData['system_task']['watchdog']):
         try:
             p = int(configData['system_task']['watchdog']['period'])
             ret = pijuice.power.SetWatchdog(p)
