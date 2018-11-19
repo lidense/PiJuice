@@ -1331,8 +1331,8 @@ class Time:
 class PiJuiceRtcAlarm:
     def __init__(self, interface):
         self._interface = interface
-        self._alarm = Alarm(self._interface)
-        self._time = Time(self._interface)
+        self.alarm = Alarm(self._interface)
+        self.time = Time(self._interface)
 
     def __enter__(self):
         # Just return this object so it can be used in a with statement
@@ -1343,47 +1343,47 @@ class PiJuiceRtcAlarm:
 
     @pijuice_error_return
     def GetControlStatus(self):
-        self._alarm.update_control_status()
+        self.alarm.update_control_status()
         return {
             'data': {
-                'alarm_wakeup_enabled': self._alarm.alarm_wake_up_enabled,
-                'alarm_flag': self._alarm.alarm_flag
+                'alarm_wakeup_enabled': self.alarm.alarm_wake_up_enabled,
+                'alarm_flag': self.alarm.alarm_flag
             },
             'error': 'NO_ERROR'
         }
 
     @pijuice_error_return
     def ClearAlarmFlag(self):
-        self._alarm.alarm_flag = False
+        self.alarm.alarm_flag = False
         return {'error': 'NO_ERROR'}
 
     @pijuice_error_return
     def SetWakeupEnabled(self, status):
-        self._alarm.alarm_wake_up_enabled = status
+        self.alarm.alarm_wake_up_enabled = status
         return {'error': 'NO_ERROR'}
 
     @pijuice_error_return
     def GetTime(self):
-        self._time.get_date_time()
+        self.time.get_date_time()
 
-        if self._time.hour_format == 12:
-            pm_shift = 12 if self._time.date_time.hour >= 12 else 0
-            hour = (self._time.date_time.hour - pm_shift) if (self._time.date_time.hour - pm_shift) else 12
+        if self.time.hour_format == 12:
+            pm_shift = 12 if self.time.date_time.hour >= 12 else 0
+            hour = (self.time.date_time.hour - pm_shift) if (self.time.date_time.hour - pm_shift) else 12
             hour = '{}{}'.format(hour, 'PM' if pm_shift == 12 else 'AM')
         else:
-            hour = self._time.date_time.hour
+            hour = self.time.date_time.hour
 
         result = {
-            'second': self._time.date_time.second,
-            'minute': self._time.date_time.minute,
+            'second': self.time.date_time.second,
+            'minute': self.time.date_time.minute,
             'hour': hour,
-            'weekday': self._time.date_time.isoweekday(),
-            'day': self._time.date_time.day,
-            'month': self._time.date_time.month,
-            'year': self._time.date_time.year,
-            'subsecond': self._time.subsecond,
-            'daylightsaving': self._time.dst_mode.name,
-            'storeoperation': self._time.store_operation
+            'weekday': self.time.date_time.isoweekday(),
+            'day': self.time.date_time.day,
+            'month': self.time.date_time.month,
+            'year': self.time.date_time.year,
+            'subsecond': self.time.subsecond,
+            'daylightsaving': self.time.dst_mode.name,
+            'storeoperation': self.time.store_operation
         }
 
         return {'data': result, 'error': 'NO_ERROR'}
@@ -1456,110 +1456,110 @@ class PiJuiceRtcAlarm:
             dst_mode = DaylightSavingMode.NONE
 
         store_operation = ('storeoperation' in dateTime)
-        self._time.set_date_time(date_time, hour_format, dst_mode, store_operation)
+        self.time.set_date_time(date_time, hour_format, dst_mode, store_operation)
 
     @pijuice_error_return
     def GetAlarm(self):
-        self._alarm.get_alarm()
-        alarm = {'second': self._alarm._second}
+        self.alarm.get_alarm()
+        alarm = {'second': self.alarm._second}
 
-        if self._alarm._use_minute_period:
-            alarm['minute_period'] = self._alarm._minute_period
+        if self.alarm._use_minute_period:
+            alarm['minute_period'] = self.alarm._minute_period
         else:
-            alarm['minute'] = self._alarm._minute
+            alarm['minute'] = self.alarm._minute
 
-        if self._alarm._every_hour:
+        if self.alarm._every_hour:
             alarm['hour'] = 'EVERY_HOUR'
-        elif not self._alarm._use_multiple_hours:
-            if self._alarm._hour_format == 24:
-                alarm['hour'] = self._alarm._hour
+        elif not self.alarm._use_multiple_hours:
+            if self.alarm._hour_format == 24:
+                alarm['hour'] = self.alarm._hour
             else:
-                pm_shift = 12 if self._alarm._hour >= 12 else 0
-                hour = (self._alarm._hour - pm_shift) if (self._alarm._hour - pm_shift) else 12
+                pm_shift = 12 if self.alarm._hour >= 12 else 0
+                hour = (self.alarm._hour - pm_shift) if (self.alarm._hour - pm_shift) else 12
                 alarm['hour'] = '{}{}'.format(hour, 'PM' if pm_shift == 12 else 'AM')
         else:
-            if self._alarm._hour_format == 24:
-                alarm['hour'] = ';'.join((str(hour) for hour in self._alarm._hours))
+            if self.alarm._hour_format == 24:
+                alarm['hour'] = ';'.join((str(hour) for hour in self.alarm._hours))
             else:
                 hours_12 = []
-                for hour in self._alarm._hours:
+                for hour in self.alarm._hours:
                     pm_shift = 12 if hour >= 12 else 0
                     hour_12 = (hour - pm_shift) if (hour - pm_shift) else 12
                     hours_12.append('{}{}'.format(hour_12, 'PM' if pm_shift == 12 else 'AM'))
 
                 alarm['hour'] = ';'.join(hours_12)
 
-        if self._alarm._use_weekday:
-            if self._alarm._every_day:
+        if self.alarm._use_weekday:
+            if self.alarm._every_day:
                 alarm['weekday'] = 'EVERY_DAY'
-            elif not self._alarm._use_multiple_weekdays:
-                alarm['weekday'] = self._alarm._weekday
+            elif not self.alarm._use_multiple_weekdays:
+                alarm['weekday'] = self.alarm._weekday
             else:
-                alarm['weekday'] = ';'.join((str(weekday) for weekday in self._alarm._weekdays))
+                alarm['weekday'] = ';'.join((str(weekday) for weekday in self.alarm._weekdays))
         else:
-            if self._alarm._every_day:
+            if self.alarm._every_day:
                 alarm['day'] = 'EVERY_DAY'
             else:
-                alarm['day'] = self._alarm._day
+                alarm['day'] = self.alarm._day
 
         return {'data': alarm, 'error': 'NO_ERROR'}
 
     @pijuice_error_return
     def SetAlarm(self, alarm):
         if not alarm:
-            self._alarm.set_alarm(False)
+            self.alarm.set_alarm(False)
 
         if 'second' in alarm:
             try:
-                self._alarm.second = int(alarm['second'])
+                self.alarm.second = int(alarm['second'])
             except (TypeError, ValueError, BadArgumentError):
                 raise InvalidSecondError
         else:
-            self._alarm.second = 0
+            self.alarm.second = 0
 
         if 'minute' in alarm:
             try:
-                self._alarm.minute = int(alarm['minute'])
+                self.alarm.minute = int(alarm['minute'])
             except (TypeError, ValueError, BadArgumentError):
                 raise InvalidMinuteError
         elif 'minute_period' in alarm:
             try:
-                self._alarm.minute_period = int(alarm['minute_period'])
+                self.alarm.minute_period = int(alarm['minute_period'])
             except (TypeError, ValueError, BadArgumentError):
                 raise InvalidMinutePeriodError
         else:
-            self._alarm.minute_period = 1  # every minute
+            self.alarm.minute_period = 1  # every minute
 
         if 'hour' in alarm:
             hour = alarm['hour']
             if hour == 'EVERY_HOUR':
-                self._alarm.every_hour = True
+                self.alarm.every_hour = True
             elif isinstance(hour, int):
                 try:
-                    self._alarm.hour = hour
+                    self.alarm.hour = hour
                 except BadArgumentError:
                     raise InvalidHourError
 
-                self._alarm.hour_format = 24
+                self.alarm.hour_format = 24
             elif isinstance(hour, str):
                 # 12-hour format, PM
                 if re.match('^(0[1-9]|1[0-2]|[1-9])[pP][mM]$', hour):
                     hour = int(re.match('^(0[1-9]|1[0-2]|[1-9])', hour)[0])
-                    self._alarm.hour_format = 12
-                    self._alarm.hour = 12 + hour if hour != 12 else 12
+                    self.alarm.hour_format = 12
+                    self.alarm.hour = 12 + hour if hour != 12 else 12
                 # 12-hour format, AM
                 elif re.match('^(0[1-9]|1[0-2]|[1-9])[aA][mM]$', hour):
                     hour = int(re.match('^(0[1-9]|1[0-2]|[1-9])', hour)[0])
-                    self._alarm.hour_format = 12
-                    self._alarm.hour = hour if hour != 12 else 0
+                    self.alarm.hour_format = 12
+                    self.alarm.hour = hour if hour != 12 else 0
                 # 24-hour format is the same for both strings and integers
                 elif re.match('^(0[0-9]|1[0-9]|2[0-3]|[0-9])$', hour):
-                    self._alarm.hour_format = 24
-                    self._alarm.hour = int(hour)
+                    self.alarm.hour_format = 24
+                    self.alarm.hour = int(hour)
                 elif ';' in hour:
                     hours = hour.rstrip(';').split(';')
                     if hours:
-                        self._alarm.hour_format = 24
+                        self.alarm.hour_format = 24
                         out_hours = []
                         for elem in hours:
                             if re.match('^(0[1-9]|1[0-2]|[1-9])[pP][mM]$', elem):
@@ -1574,20 +1574,20 @@ class PiJuiceRtcAlarm:
                                 out_hours.append(int(hour))
                             else:
                                 raise InvalidHourError
-                        self._alarm.hours = out_hours
+                        self.alarm.hours = out_hours
                     else:
                         raise InvalidHourError
                 else:
                     raise InvalidHourError
         else:
-            self._alarm.every_hour = True
+            self.alarm.every_hour = True
 
         if 'weekday' in alarm:
             if alarm['weekday'] == 'EVERY_DAY':
-                self._alarm.every_day = True
+                self.alarm.every_day = True
             elif ';' not in alarm['weekday']:
                 try:
-                    self._alarm.weekday = int(alarm['weekday'])
+                    self.alarm.weekday = int(alarm['weekday'])
                 except (TypeError, ValueError, BadArgumentError):
                     raise InvalidWeekdayError
             else:
@@ -1597,23 +1597,23 @@ class PiJuiceRtcAlarm:
                     try:
                         for wd in weekdays:
                             weekdays_out.append(int(wd))
-                        self._alarm.weekdays = weekdays_out
+                        self.alarm.weekdays = weekdays_out
                     except (TypeError, ValueError, BadArgumentError):
                         raise InvalidDayError
                 else:
                     raise InvalidWeekdayError
         elif 'day' in alarm:
             if alarm['day'] == 'EVERY_DAY':
-                self._alarm.every_day = True
+                self.alarm.every_day = True
             else:
                 try:
-                    self._alarm.day = int(alarm['day'])
+                    self.alarm.day = int(alarm['day'])
                 except (TypeError, ValueError, BadArgumentError):
                     raise InvalidDayError
         else:
-            self._alarm.every_day = True
+            self.alarm.every_day = True
 
-        self._alarm.set_alarm()
+        self.alarm.set_alarm()
 
 
 class PiJuicePower(object):
